@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>ILSlider calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.6.2/c3.min.css">
+    <!-- jQuery JS 3.1.0 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.6.2/c3.min.js"></script>
+    <style>
+        * {
+                box-sizing: border-box;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 1em;
+            }
+            form {
+                width: 40%;
+                min-width: 550px;
+                float: left;
+            }
+            div{
+                width: 100%;
+                float: left;
+            }
+            span{
+                display: inline-block;
+                margin-top: 0.4em;
+            }
+            span span.bold {
+                font-weight: bold;
+                width: auto;
+                float: none;
+            }
+            .interest_curve_advice{
+                font-style: italic;
+                font-size: 0.9em;
+            }
+            input[type=number] {
+                padding: 0.3em;
+                margin-left: 0.5em;
+                font-size: 1em;
+                float: right;
+            }
+            .hidden{
+                /*display: none;*/
+                height: 0;
+                overflow: hidden;
+                transition: all 1s ease-in-out;
+                box-sizing: border-box;
+                margin: 0.5em 0;
+                padding: 0 0.5em;
+            }
+            .hidden div.group_int > div {
+                width: 45%;
+            }
+            .hidden div.group_int > div:last-child {
+                float: right;
+            }
+            .hidden input {
+                width: 50%;
+                transition: all 1s ease-in-out;
+            }
+            .result {
+                display: inline-block;
+                border: 1px solid grey;
+                width: 100%;
+                text-align: center;
+                padding: 0.4em;
+            }
+            .result span {
+                width: 100%;
+                float: left;
+                margin-top: 0.2em;
+            }
+            .result, #chart {
+                margin-top: 1em;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="main">
+        <form>
+            <div>
+                <span>interest</span><input type="checkbox" value="" name="variableInterestCheckBox"><label for="variableInterestCheckBox">variable
+                    interest</label> <input type="number" value="10" name="interes" id="interes">
+            </div>
+            <div class="interest_group hidden">
+                <div class="group_int 0">
+                    <div>
+                        <span>from start</span>
+                        <input type="number" value="3" name="0" id="intZero" disabled>
+                    </div>
+                </div>
+                <div class="group_int 1">
+                    <div>
+                        <span>interest curve1</span>
+                        <input type="number" class="curve" value="10" name="int1" id="int1">
+                    </div>
+                    <div></div>
+                </div>
+                <div class="group_int 1dot5">
+                    <div>
+                        <span>until installment n:</span>
+                        <input type="number" value="6" name="intN2" id="intN2">
+                    </div>
+                </div>
+                <div class="group_int 2">
+                    <div>
+                        <span>interest curve2</span>
+                        <input type="number" class="curve" value="15" name="int2" id="int2">
+                    </div>
+                    <div></div>
+                </div>
+                <div class="group_int 2dot5">
+                    <div>
+                        <span>until installment n:</span>
+                        <input type="number" value="9" name="intN3" id="intN3">
+                    </div>
+                </div>
+                <div class="group_int 3">
+                    <div>
+                        <span>interest curve3</span>
+                        <input type="number" class="curve" value="20" name="int3" id="int3">
+                    </div>
+                    <div></div>
+                </div>
+                <div class="group_int end">
+                    <div>
+                        <span>until end</span>
+                        <input type="number" value="12" name="end" id="intEnd" disabled>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span>debt</span><input type="number" value="500" name="deuda" id="deuda">
+            </div>
+            <div>
+                <span>cases</span><input type="number" value="9" name="meses" id="meses">
+            </div>
+            <div>
+                <span>decimals</span><input type="number" value="2" name="decimales" id="decimales">
+            </div>
+            <div class="result">
+            </div>
+            <span class="interest_curve_advice">(variable interest curve not applied)</span>
+            <div id="chart"></div>
+        </form>
+    </div>
+
+    <script>
+        function calculate(interes, deuda, meses) { //original kilian's formula
+            interes = interes / 100;
+            var result = (deuda * interes * (Math.pow((1 + interes), meses))) / ((Math.pow((1 + interes), meses)) - 1);
+            return result;
+        }
+
+        var interestArray;
+        var months = Number($('#meses').val());
+        var minMonths = 3;
+        var maxMonths = months + minMonths;
+
+        function getCalc() {
+            var interest = Number($('#interes').val());
+            var debt = Number($('#deuda').val());
+            months = Number($('#meses').val());
+            var decimales = Number($('#decimales').val());
+
+            var pricingTable = ['monthly amount'];
+            var totalPricingTable = ['total amount'];
+            var amount = ['debt'];
+            var XAxismonthsCount = ['x'];
+
+            console.log('\n\n*** new calculation ***\n')
+            console.log('\napplied interest array:');
+            console.table(interestArray);
+
+            $('div.result > span').remove();
+
+            /*
+                            |       |       |       |
+                months      3       6       9       12
+                interest    |   10  |   15  |   20  |
+                            [3, 10],[6, 15],[9, 20],[12] --> from month [3] -> interest is [10]%, from month [6] -> interest is [15]%, from month [9] -> interest is [20]%
+            */
+            for (var i = 0; i <= (months - 1); i++) {
+                var calculatedInterest = interest;
+                if (interestArray && interestArray.length > 0) {
+                    var n;
+                    var arrayLength = interestArray.length;
+                    for (n = 0; n < arrayLength; n++) {
+                        //console.log('n: ' + n + ', i: ' + i);
+                        if (minMonths + i >= interestArray[n][0]) {
+                            if (minMonths + i == interestArray[arrayLength - 1][0]) {
+                                calculatedInterest = (interestArray[arrayLength - 2][1]);
+                            } else {
+                                if (minMonths + i < interestArray[n + 1][0]) {
+                                    calculatedInterest = (interestArray[n][1]);
+                                }
+                            }
+                        }
+                    }
+                    //console.log('n: ' + n + ', interestArray:' + interestArray[e][0] + ', calculatedInterest: ' + calculatedInterest);
+                }
+
+                var res = calculate(calculatedInterest, debt, i + minMonths).toFixed(decimales);
+                console.log('case' + i + ': ' + res + ' interest: ' + calculatedInterest);
+                $('div.result').append('<span class="int' + parseInt(calculatedInterest) + '"><span class="bold">' + (
+                    minMonths + i) + ' installments: ' + res + ' €' + '</span> => TOTAL: ' + (res * (minMonths +
+                    i)).toFixed(decimales) + ' (case ' + i + ')</span>');
+                var commonBg = 'hsl(' + parseInt(calculatedInterest * 8) + ',' + parseInt(calculatedInterest * 8) +
+                    '%,' + '85%' + ')';
+                $('span.int' + parseInt(calculatedInterest)).css('background-color', commonBg);
+                $('.group_int input.curve').each(function () {
+                    if ($(this).val() == calculatedInterest) {
+                        $(this).closest('div').css('background-color', commonBg);
+                    }
+                });
+                pricingTable.push(Number(res));
+                totalPricingTable.push(Number(res * (minMonths + i)));
+                amount.push(Number(debt));
+                XAxismonthsCount.push(minMonths + i);
+            }
+
+            var chart = c3.generate({
+                bindto: '#chart',
+                data: {
+                    x: 'x',
+                    columns: [
+                        pricingTable,
+                        totalPricingTable,
+                        amount,
+                        XAxismonthsCount
+                    ],
+                    type: 'spline'
+                },
+                axis: {
+                    x: {
+                        label: 'month'
+                    },
+                    y: {
+                        label: 'amount'
+                    }
+                }
+            });
+        }
+
+        function getInterestArray() {
+            //example: [3, 10],[6, 15],[9, 20],[12]
+            interestArray = [
+                [Number($('input#intZero').val()), ($('input#int1').val())],
+                [Number($('input#intN2').val()), ($('input#int2').val())],
+                [Number($('input#intN3').val()), ($('input#int3').val())],
+                [Number($('input#intEnd').val())]
+            ];
+            $('#arrayPrint').remove();
+            var printArray = '<div id="arrayPrint">array to print: [[' + interestArray[0] + '],[' + interestArray[1] +
+                '],[' + interestArray[2] + ']]</div>';
+            $(printArray).insertAfter('div.result');
+        }
+        $(document).ready(function () {
+            $('input[type=checkbox').prop('checked', false);
+            $('input#intZero').val(minMonths);
+            $('input#intEnd').val(maxMonths);
+            getCalc();
+            $('input[type=checkbox').on('click', function () {
+                if ($(this).is(':checked')) {
+                    $('input#interes').hide();
+                    $('.interest_curve_advice').hide();
+                    $('div.hidden').css({
+                        'height': ($('.hidden > div').length * 2.4) + 'em',
+                        'padding': '0.5em',
+                        'border': '1px solid grey'
+                    });
+                    getInterestArray();
+                } else {
+                    $('div.hidden').css({
+                        'height': 0,
+                        'padding': '0 0.5em',
+                        'border': '1px solid transparent'
+                    });
+                    interestArray.length = 0;
+                    $('input#interes').show();
+                    $('.interest_curve_advice').show();
+                    $('#arrayPrint').remove();
+                }
+                getCalc();
+            });
+            $('#interes, #deuda, #meses, #decimales, .interest_group input').on('keyup change', function () {
+                var maxMonths = Number($('#meses').val()) + minMonths;
+                console.log('maxMonths: ' + maxMonths);
+                if ($('#meses').val() >= (maxMonths - minMonths)) {
+                    $('input#intEnd').val(maxMonths);
+                }
+                if ($('input[type=checkbox]').is(':checked')) {
+                    getInterestArray();
+                } else {
+                    interestArray.length = 0;
+                }
+
+                getCalc();
+            });
+        });
+    </script>
+</body>
+
+</html>

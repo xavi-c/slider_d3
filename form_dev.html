@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>ILSlider calculator</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.6.2/c3.min.css">
+        <!-- jQuery JS 3.1.0 -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.6.2/c3.min.js"></script>
+
+        <script src="js/main.js" type="module" crossorigin="anonymous"></script>
+        <script src="bundle.js" nomodule crossorigin="anonymous"></script>
+        <!-- <script src="js/fallback.js" nomodule></script> -->
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 1em;
+            }
+            form {
+                width: 40%;
+                min-width: 550px;
+                float: left;
+            }
+            div{
+                width: 100%;
+                float: left;
+            }
+            span{
+                display: inline-block;
+                margin-top: 0.4em;
+            }
+            span span.bold {
+                font-weight: bold;
+                width: auto;
+                float: none;
+            }
+            .interest_curve_advice{
+                font-style: italic;
+                font-size: 0.9em;
+            }
+            input[type=number] {
+                padding: 0.3em;
+                margin-left: 0.5em;
+                font-size: 1em;
+                float: right;
+            }
+            .hidden{
+                /*display: none;*/
+                height: 0;
+                overflow: hidden;
+                transition: all 1s ease-in-out;
+                box-sizing: border-box;
+                margin: 0.5em 0;
+                padding: 0 0.5em;
+            }
+            .hidden div.group_int > div {
+                width: 45%;
+            }
+            .hidden div.group_int > div:last-child {
+                float: right;
+            }
+            .hidden input {
+                width: 50%;
+                transition: all 1s ease-in-out;
+            }
+            .result {
+                display: inline-block;
+                border: 1px solid grey;
+                width: 100%;
+                text-align: center;
+                padding: 0.4em;
+            }
+            .result span {
+                width: 100%;
+                float: left;
+                margin-top: 0.2em;
+            }
+            .result, #chart {
+                margin-top: 1em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="main">
+            <form>
+                <div>
+                    <span>interest</span><input type="checkbox" value="" name="variableInterestCheckBox"><label for="variableInterestCheckBox">variable interest</label> <input type="number" value="10" name="interes" id="interes">
+                </div>
+                <div class="interest_group hidden">
+                    <div class="group_int 0">
+                        <div>
+                            <span>from start</span>
+                            <input type="number" value="3" name="0" id="intZero" disabled>
+                        </div>
+                    </div>
+                    <div class="group_int 1">
+                        <div>
+                            <span>interest curve1</span>
+                            <input type="number" class="curve" value="10" name="int1" id="int1">
+                        </div>
+                        <div></div>
+                    </div>
+                    <div class="group_int 1dot5">
+                        <div>
+                            <span>until installment n:</span>
+                            <input type="number" value="6" name="intN2" id="intN2">
+                        </div>
+                    </div>
+                    <div class="group_int 2">
+                        <div>
+                            <span>interest curve2</span>
+                            <input type="number" class="curve" value="15" name="int2" id="int2">
+                        </div>
+                        <div></div>
+                    </div>
+                    <div class="group_int 2dot5">
+                        <div>
+                            <span>until installment n:</span>
+                            <input type="number" value="9" name="intN3" id="intN3">
+                        </div>
+                    </div>
+                    <div class="group_int 3">
+                        <div>
+                            <span>interest curve3</span>
+                            <input type="number" class="curve" value="20" name="int3" id="int3">
+                        </div>
+                        <div></div>
+                    </div>
+                    <div class="group_int end">
+                        <div>
+                            <span>until end</span>
+                            <input type="number" value="12" name="end" id="intEnd" disabled>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <span>debt</span><input type="number" value="500" name="deuda" id="deuda">
+                </div>
+                <div>
+                    <span>cases</span><input type="number" value="9" name="meses" id="meses">
+                </div>
+                <div>
+                    <span>decimals</span><input type="number" value="2" name="decimales" id="decimales">
+                </div>
+                <div class="result">
+                </div>
+                <span class="interest_curve_advice">(variable interest curve not applied)</span>
+                <div id="chart"></div>
+            </form>
+        </div>
+    </body>
+</html>
